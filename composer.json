@@ -17,7 +17,15 @@
     },
     "autoload": {
         "psr-4": {
-            "Core\\BootstrapForm\\": "src/"
+            "Natabio\\BS4Form\\": "src/"
+        }
+    },
+    "laravel": {
+        "providers": [
+            "Natabio\\BS4Form\\BootstrapFormServiceProvider"
+        ],
+        "aliases": {
+            "Form": "Collective\\Html\\FormFacade"
         }
     }
 }
