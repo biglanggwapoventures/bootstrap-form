@@ -1,7 +1,7 @@
-<?php namespace Core\BootstrapForm;
+<?php namespace Natabio\BS4Form;
 
-use Config;
 use Collective\Html\FormBuilder as CollectiveFormBuilder;
+use Config;
 
 class BootstrapFormBuilder extends CollectiveFormBuilder
 {
@@ -32,7 +32,7 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
 
         $label = $label ? $this->label($name, $label) : '';
 
-        return $this->toHtmlString('<div'.$this->html->attributes($options).'>'.$label);
+        return $this->toHtmlString('<div' . $this->html->attributes($options) . '>' . $label);
     }
 
     /**
@@ -46,7 +46,7 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
 
         $errors = $this->getFormattedErrors($name);
 
-        return $this->toHtmlString($errors.'</div>');
+        return $this->toHtmlString($errors . '</div>');
     }
 
     /**
@@ -62,7 +62,29 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
     {
         $options = $this->appendClassToOptions(Config::get('form-builder.control-class'), $options);
 
+        if ($this->hasErrors($name)) {
+            $options = $this->appendClassToOptions('is-invalid', $options);
+        }
+
         return parent::input($type, $name, $value, $options);
+    }
+
+    /**
+     * Create a form password
+     *
+     * @param  string  $name
+     * @param  array   $options
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function password($name, $options = array())
+    {
+        $options = $this->appendClassToOptions(Config::get('form-builder.control-class'), $options);
+
+        if ($this->hasErrors($name)) {
+            $options = $this->appendClassToOptions('is-invalid', $options);
+        }
+
+        return parent::password($name, $options);
     }
 
     /**
@@ -80,11 +102,16 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
         $list = [],
         $selected = null,
         array $selectAttributes = [],
-        array $optionsAttributes = []
+        array $optionsAttributes = [],
+        array $optgroupsAttributes = []
     ) {
-        $selectAttributes = $this->appendClassToOptions(Config::get('form-builder.control-class'), $selectAttributes);
+        $selectAttributes = $this->appendClassToOptions(Config::get('form-builder.control-class-select'), $selectAttributes);
 
-        return parent::select($name, $list, $selected, $selectAttributes, $optionsAttributes);
+        if ($this->hasErrors($name)) {
+            $selectAttributes = $this->appendClassToOptions('is-invalid', $selectAttributes);
+        }
+
+        return parent::select($name, $list, $selected, $selectAttributes, $optionsAttributes, $optgroupsAttributes);
     }
 
     /**
@@ -128,7 +155,9 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
      */
     protected function checkable($type, $name, $value, $checked, $options)
     {
-        if ($this->getCheckedState($type, $name, $value, $checked)) $options['checked'] = 'checked';
+        if ($this->getCheckedState($type, $name, $value, $checked)) {
+            $options['checked'] = 'checked';
+        }
 
         return parent::input($type, $name, $value, $options);
     }
@@ -219,10 +248,16 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
      */
     public function textarea($name, $value = null, $options = array())
     {
+        $options = $this->appendClassToOptions(Config::get('form-builder.control-class'), $options);
+
+        if ($this->hasErrors($name)) {
+            $options = $this->appendClassToOptions('is-invalid', $options);
+        }
+
         return parent::textarea(
             $name,
             $value,
-            $this->appendClassToOptions(Config::get('form-builder.control-class'), $options)
+            $options
         );
     }
 
@@ -265,8 +300,8 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
     private function appendClassToOptions($class, array $options = array())
     {
         isset($options['class'])
-            ? $options['class'] = $options['class'] . ' ' . $class
-            : $options['class'] = $class;
+        ? $options['class'] = $options['class'] . ' ' . $class
+        : $options['class'] = $class;
 
         return $options;
     }
@@ -312,7 +347,7 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
         // Get errors session
         $errors = $this->getErrorsSession();
 
-        return $errors->first($this->transformKey($name), '<p class="help-block">:message</p>');
+        return $errors->first($this->transformKey($name), '<div class="invalid-feedback">:message</div>');
     }
 
     /**
@@ -325,7 +360,7 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
      */
     private function wrapCheckable($label, $type, $checkAble)
     {
-        return $this->toHtmlString('<div class="'.$type.'"><label>'.$checkAble.' '.$label.'</label></div>');
+        return $this->toHtmlString('<div class="' . $type . '"><label>' . $checkAble . ' ' . $label . '</label></div>');
     }
 
     /**
@@ -338,7 +373,102 @@ class BootstrapFormBuilder extends CollectiveFormBuilder
      */
     private function wrapInlineCheckable($label, $type, $checkAble)
     {
-        return $this->toHtmlString('<div class="'.$type.'-inline">'.$checkAble.' '.$label.'</div>');
+        return $this->toHtmlString('<div class="' . $type . '-inline">' . $checkAble . ' ' . $label . '</div>');
+    }
+
+    /**
+     * Create an input form group
+     *
+     * @param  string  $type
+     * @param  string  $label
+     * @param  string  $name
+     * @param  string  $value
+     * @param  array   $options
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function inputGroup($type, $label = null, $name, $value = null, $options = array())
+    {
+        $group = [];
+
+        $group[] = $this->openGroup($name, $label);
+
+        $group[] = $this->input($type, $name, $value, $options);
+
+        $group[] = $this->closeGroup();
+
+        return implode('', $group);
+    }
+
+    /**
+     * Create a select form group
+     *
+     * @param  string  $type
+     * @param  string  $label
+     * @param  string  $name
+     * @param  string  $value
+     * @param  array   $options
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function selectGroup(
+        $label = null,
+        $name,
+        $list = [],
+        $selected = null,
+        array $selectAttributes = [],
+        array $optionsAttributes = [],
+        array $optgroupsAttributes = []
+    ) {
+        $group = [];
+
+        $group[] = $this->openGroup($name, $label);
+
+        $group[] = $this->select($name, $list, $selected, $selectAttributes, $optionsAttributes, $optgroupsAttributes);
+
+        $group[] = $this->closeGroup();
+
+        return implode('', $group);
+    }
+
+    /**
+     * Create an password form group
+     *
+     * @param  string  $label
+     * @param  string  $name
+     * @param  array   $options
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function passwordGroup($label = null, $name, $options = array())
+    {
+        $group = [];
+
+        $group[] = $this->openGroup($name, $label);
+
+        $group[] = $this->password($name, $options);
+
+        $group[] = $this->closeGroup();
+
+        return implode('', $group);
+    }
+
+    /**
+     * Create an texatrea form group
+     *
+     * @param  string  $label
+     * @param  string  $name
+     * @param  array   $options
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function textAreaGroup($label = null, $name, $value = null, $options = array())
+    {
+        $group = [];
+
+        $group[] = $this->openGroup($name, $label);
+
+        $group[] = $this->textarea($name, $value, $options);
+
+        $group[] = $this->closeGroup();
+
+        return implode('', $group);
     }
 
 }

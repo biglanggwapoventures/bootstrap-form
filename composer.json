@@ -20,12 +20,11 @@
             "Natabio\\BS4Form\\": "src/"
         }
     },
-    "laravel": {
-        "providers": [
-            "Natabio\\BS4Form\\BootstrapFormServiceProvider"
-        ],
-        "aliases": {
-            "Form": "Collective\\Html\\FormFacade"
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Natabio\\BS4Form\\BootstrapFormServiceProvider"
+            ]
         }
     }
 }

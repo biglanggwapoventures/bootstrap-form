@@ -1,4 +1,4 @@
-<?php namespace Core\BootstrapForm;
+<?php namespace Natabio\BS4Form;
 
 use Collective\Html\HtmlServiceProvider;
 
@@ -13,7 +13,7 @@ class BootstrapFormServiceProvider extends HtmlServiceProvider
     {
         // Publishing package configuration file
         $this->publishes([
-            realpath(__DIR__ . '/../config') => config_path()
+            realpath(__DIR__ . '/../config') => config_path(),
         ], 'config');
     }
     /**
@@ -28,7 +28,7 @@ class BootstrapFormServiceProvider extends HtmlServiceProvider
             __DIR__ . '/../config/form-builder.php', 'form-builder'
         );
         // Register FormBuilder as singleton instance
-        $this->app->singleton('form', function($app) {
+        $this->app->singleton('form', function ($app) {
             $form = new BootstrapFormBuilder(
                 $app['html'],
                 $app['url'],
